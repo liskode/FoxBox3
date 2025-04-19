@@ -7,10 +7,10 @@ const StudyPage: React.FC = () => {
     <Container maxWidth="md">
       <Box sx={{ mt: 4, mb: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom align="center">
-          FoxBox Study Session
+          FoxBox Leitner System
         </Typography>
         <Typography variant="subtitle1" gutterBottom align="center" color="text.secondary">
-          Review your flashcards and mark them as correct or incorrect.
+          Review your flashcards using the 7-box Leitner method for efficient memorization.
         </Typography>
         <FlashCardDeck />
       </Box>
