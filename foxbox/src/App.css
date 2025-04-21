@@ -1,9 +1,12 @@
 .App {
   text-align: center;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .App-logo {
-  height: 40vmin;
+  height: 60px;
   pointer-events: none;
 }
 
@@ -14,7 +17,7 @@
 }
 
 .App-header {
-  background-color: #282c34;
+  background-color: #1e1e1e; /* Dark mode background */
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -25,7 +28,20 @@
 }
 
 .App-link {
-  color: #61dafb;
+  color: #90caf9; /* Light blue for dark mode */
+}
+
+/* Add these new styles for dark mode specific elements */
+.dark-container {
+  background-color: #121212;
+  color: rgba(255, 255, 255, 0.87);
+  min-height: 100%;
+}
+
+.dark-paper {
+  background-color: #1e1e1e;
+  padding: 1rem;
+  border-radius: 4px;
 }
 
 @keyframes App-logo-spin {
