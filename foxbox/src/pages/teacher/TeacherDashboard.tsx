@@ -3,6 +3,7 @@ import { useAppContext } from '../../context/AppContext';
 import { Container, Typography, Select, MenuItem, Button, List, ListItem, ListItemText, Box, Paper, Grid, SelectChangeEvent, Divider, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TeacherProgressView from '../../components/teacher/TeacherProgressView';
+import CardStatisticsView from '../../components/teacher/CardStatisticsView';
 
 const TeacherDashboard: React.FC = () => {
     const { flashcardSets, classes, assignSetToClass, resetAllProgress } = useAppContext();
@@ -49,6 +50,9 @@ const TeacherDashboard: React.FC = () => {
             <Typography variant="h4" component="h1" gutterBottom>
                 Teacher Dashboard
             </Typography>
+
+            {/* Card Statistics Dashboard */}
+            <CardStatisticsView />
 
             <Grid container spacing={3}>
                 {/* Row 1: Controls and Lists */}
