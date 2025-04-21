@@ -1,45 +1,66 @@
-# FoxBox3 Project Overview
+# FoxBox3 - Leitner System Flashcard Application
 
-This project, FoxBox3, appears to be a web-based flashcard study application.
+FoxBox3 is an interactive web application designed to help students learn and review material using the Leitner spaced repetition system. The application enables teachers to assign flashcards to students and track their progress through an intuitive dashboard.
+
+## Features
+
+### Teacher Dashboard
+- **Assignment Management**: Assign flashcard sets to entire classes
+- **Student Statistics**: Track student progress with visual tools
+  - Class-based statistics showing unique cards per class
+  - Individual student progress bars
+  - Mini calendars displaying 30-day student activity
+  - Box distribution charts showing mastery progression
+- **Card Statistics**: Analyze card difficulty across students
+
+### Student Experience
+- **Spaced Repetition**: Implements the Leitner system with 8 boxes
+  - Cards correctly answered move to higher boxes
+  - Cards incorrectly answered return to Box 1
+- **Review Scheduling**: Calendar-based review system ensures students review cards at optimal intervals
+- **Progress Tracking**: Students can see their progress through the system
+- **Study Mode**: Interactive flashcard interface with questions and answers
+
+## Technology Stack
+
+- **Frontend**: React, TypeScript, Material UI
+- **State Management**: React Context API
+- **Routing**: React Router
+- **Styling**: Material UI with custom theming
 
 ## Project Structure
 
-The project is organized into the following main directories and files:
+The project is organized into the following main directories:
 
--   `.git/`: Contains Git repository metadata.
--   `flashcards/`: Stores the flashcard content as PNG image files. Filenames seem to follow a pattern like `[Topic]FC[Set]_[CardNumber][Q/R].png` (e.g., `421FC_01Q.png`). 'Q' likely represents the question side and 'R' the answer side.
--   `foxbox/`: Contains the source code for the React web application that displays the flashcards.
-    -   `public/`: Holds static assets for the web app, including the main `index.html` file. This is the HTML file served to the browser. It also contains a `flashcards` subdirectory, purpose unclear without further investigation (might be related to build process or unused).
-    -   `src/`: Contains the React application's TypeScript (`.tsx`) source code.
-        -   `components/`: Reusable UI components.
-        -   `pages/`: Components representing different application pages (e.g., `StudyPage.tsx`).
-        -   `App.tsx`: The main application component, setting up routing and theme (using Material UI).
-        -   `index.tsx`: The entry point that renders the React app into the DOM.
-    -   `package.json`: Defines project dependencies and scripts (like `npm start`, `npm run build`).
-    -   `tsconfig.json`: TypeScript configuration.
-    -   `README.md`: Standard Create React App README with instructions on running/building the `foxbox` app.
--   `.gitignore`: Specifies files and directories ignored by Git.
--   `README.md`: This file (the main project README).
+- `flashcards/`: Contains flashcard image files (questions and answers)
+- `foxbox/`: React application source code
+  - `src/components/`: Reusable UI components
+    - `common/`: Shared components like headers
+    - `student/`: Student-specific components
+    - `teacher/`: Teacher dashboard components
+  - `src/context/`: Application state management
+  - `src/pages/`: Page components for different views
+  - `src/types/`: TypeScript type definitions
+  - `src/config/`: Configuration files
 
-## Functionality
+## Recent Improvements
 
-The `foxbox` web application serves as the user interface for studying the flashcards stored in the `flashcards/` directory.
+- Added student usage mini-calendars with color-coded activity tracking
+- Integrated statistics summary in application header
+- Optimized class card calculations to count unique flashcards
+- Enhanced study session tracking with partial/completed session indicators
+- Fixed infinite loop issues in the student study page
+- Improved image loading for flashcards
 
--   It's built using **React** and **TypeScript**.
--   **Material UI** is used for styling and UI components.
--   **React Router** handles navigation within the application. Currently, the main route points to a `StudyPage` component, which likely implements the flashcard viewing logic.
--   Users presumably interact with this web application to view flashcard questions and reveal answers.
+## Getting Started
 
-## How it Works (High-Level)
-
-1.  A web server (likely the development server via `npm start` or a production build server) serves the `foxbox/public/index.html` file.
-2.  This `index.html` file loads the bundled JavaScript code generated from the `foxbox/src/` directory.
-3.  The React application (`App.tsx`, `index.tsx`) initializes, sets up routing, and renders the UI.
-4.  The `StudyPage` component fetches or accesses the flashcard images (potentially from the `/flashcards` directory or a path configured during the build) and displays them to the user.
+1. Clone the repository
+2. Navigate to the `foxbox` directory
+3. Install dependencies with `npm install`
+4. Start the development server with `npm start`
+5. Access the application at `http://localhost:3000`
 
 ## HTML Files Location
 
 The main HTML file for the web application is located at:
 `foxbox/public/index.html`
-
-This file serves as the container for the dynamically generated content produced by the React application.

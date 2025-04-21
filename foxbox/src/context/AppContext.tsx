@@ -202,6 +202,11 @@ interface AppContextType {
     resetAllProgress: () => void;
     getStudentCurrentDay: (studentId: string) => number;
     updateStudentCurrentDay: (studentId: string, day: number) => void;
+    trackStudentUsage: (studentId: string) => void;
+    getStudentUsageDates: (studentId: string, days?: number) => string[];
+    getStudentCompletedDates: (studentId: string, days?: number) => string[];
+    getStudentPartialDates: (studentId: string, days?: number) => string[];
+    getStudentFirstActivityDate: (studentId: string) => string | undefined;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -211,19 +216,88 @@ interface AppProviderProps {
     children: ReactNode;
 }
 
-export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
-    const [flashcardSetsState] = useState<FlashcardSet[]>(mockFlashcardSets);
-    const [classesState] = useState<Class[]>(mockClasses);
+// Mock student progress (empty at first)
+const mockStudentProgress: { [studentId: string]: StudentProgress } = {
+    alice: { studentId: 'alice', progress: {} },
+    bob: { studentId: 'bob', progress: {} },
+    charlie: { studentId: 'charlie', progress: {} },
+    david: { studentId: 'david', progress: {} },
+    eve: { studentId: 'eve', progress: {} },
+    frank: { studentId: 'frank', progress: {} },
+    grace: { studentId: 'grace', progress: {} }
+};
 
-    // Initialize state from localStorage or empty object
-    const [studentProgress, setStudentProgress] = useState<{ [studentId: string]: StudentProgress }>(() => {
-        try {
-            const storedProgress = localStorage.getItem(LOCAL_STORAGE_KEY);
-            return storedProgress ? JSON.parse(storedProgress) : {};
-        } catch (error) {
-            console.error("Error reading student progress from localStorage:", error);
-            return {};
+// Add mock usage dates to existing mock student progress
+const addMockUsageDates = (progress: { [studentId: string]: StudentProgress }) => {
+    const newProgress = JSON.parse(JSON.stringify(progress));
+    const today = new Date();
+    
+    // Helper to generate random past dates within the last 21 days
+    const generateRandomDates = (count: number): string[] => {
+        const dates: string[] = [];
+        for (let i = 0; i < count; i++) {
+            const daysAgo = Math.floor(Math.random() * 21); // 0-20 days ago
+            const date = new Date(today);
+            date.setDate(today.getDate() - daysAgo);
+            dates.push(date.toISOString().split('T')[0]);
         }
+        // Remove duplicates and convert to array
+        return Array.from(new Set(dates));
+    };
+    
+    // Add usage dates for each student
+    // Alice - very active student
+    if (newProgress['alice']) {
+        newProgress['alice'].usageDates = generateRandomDates(15);
+    }
+    
+    // Bob - moderately active
+    if (newProgress['bob']) {
+        newProgress['bob'].usageDates = generateRandomDates(8);
+    }
+    
+    // Charlie - less active
+    if (newProgress['charlie']) {
+        newProgress['charlie'].usageDates = generateRandomDates(4);
+    }
+    
+    // David - sporadic usage
+    if (newProgress['david']) {
+        newProgress['david'].usageDates = generateRandomDates(3);
+    }
+    
+    // Eve - very active
+    if (newProgress['eve']) {
+        newProgress['eve'].usageDates = generateRandomDates(18);
+    }
+    
+    return newProgress;
+};
+
+export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+    const [flashcardSetsState, setFlashcardSetsState] = useState<FlashcardSet[]>(mockFlashcardSets);
+    const [classesState, setClassesState] = useState<Class[]>(mockClasses);
+    
+    // Initialize student progress from localStorage or with mock data
+    const [studentProgress, setStudentProgress] = useState<{ [studentId: string]: StudentProgress }>(() => {
+        let initialProgress;
+        try {
+            const savedProgress = localStorage.getItem(LOCAL_STORAGE_KEY);
+            initialProgress = savedProgress ? JSON.parse(savedProgress) : {};
+            
+            // If there's no saved progress, use mock data
+            if (Object.keys(initialProgress).length === 0) {
+                initialProgress = mockStudentProgress;
+                // Add mock usage dates
+                initialProgress = addMockUsageDates(initialProgress);
+            }
+        } catch (error) {
+            console.error("Error loading student progress from localStorage:", error);
+            initialProgress = mockStudentProgress;
+            // Add mock usage dates
+            initialProgress = addMockUsageDates(initialProgress);
+        }
+        return initialProgress;
     });
 
     // Effect to save progress to localStorage whenever it changes
@@ -354,6 +428,112 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         }
     }, []);
 
+    // Function to track student usage (add today's date to their usage history)
+    const trackStudentUsage = useCallback((studentId: string) => {
+        const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+        
+        setStudentProgress(prevProgress => {
+            // Deep copy the previous state
+            const newProgress = JSON.parse(JSON.stringify(prevProgress));
+            
+            // If this student doesn't exist yet, create an entry
+            if (!newProgress[studentId]) {
+                newProgress[studentId] = { 
+                    studentId, 
+                    progress: {},
+                    usageDates: [today]
+                };
+            } else {
+                // Initialize usageDates array if it doesn't exist
+                if (!newProgress[studentId].usageDates) {
+                    newProgress[studentId].usageDates = [];
+                }
+                
+                // Add today's date if it's not already in the array
+                if (!newProgress[studentId].usageDates.includes(today)) {
+                    newProgress[studentId].usageDates.push(today);
+                }
+            }
+            
+            return newProgress;
+        });
+    }, []);
+    
+    // Function to get student usage dates
+    const getStudentUsageDates = useCallback((studentId: string, days = 30): string[] => {
+        const student = studentProgress[studentId];
+        if (!student || !student.usageDates) {
+            return [];
+        }
+        
+        // Sort dates in descending order (newest first)
+        const sortedDates = [...student.usageDates].sort((a, b) => 
+            new Date(b).getTime() - new Date(a).getTime()
+        );
+        
+        // Return the most recent 'days' number of dates
+        return sortedDates.slice(0, days);
+    }, [studentProgress]);
+
+    // Get dates when student completed all exercises
+    const getStudentCompletedDates = useCallback((studentId: string, days = 30): string[] => {
+        const student = studentProgress[studentId];
+        if (!student || !student.usageDates) {
+            return [];
+        }
+        
+        // A session is considered "complete" if all assigned cards were reviewed on that day
+        const completedDates: string[] = [];
+        
+        // Special case for student s6 (Frank) - mark as incomplete
+        if (studentId === 's6') {
+            return []; // Frank's sessions are all incomplete
+        }
+        
+        // For other students, use the simplified logic for now
+        // In a real implementation, you would check if all assigned cards were reviewed on each date
+        const usageDates = student.usageDates;
+        
+        // For demo, alternating days as complete (except for Frank)
+        if (studentId !== 's6') {
+            const sortedDates = [...usageDates].sort();
+            return sortedDates.filter((_, i) => i % 2 === 0).slice(-days);
+        }
+        
+        return completedDates;
+    }, [studentProgress]);
+
+    // Get dates when student had partial completion
+    const getStudentPartialDates = useCallback((studentId: string, days = 30): string[] => {
+        const student = studentProgress[studentId];
+        if (!student || !student.usageDates) {
+            return [];
+        }
+        
+        // Special case for student s6 (Frank) - all sessions are partial
+        if (studentId === 's6') {
+            return student.usageDates.slice(-days); // All of Frank's sessions are partial
+        }
+        
+        // For other students, consider all usage dates that aren't in the completed set as partial
+        const usageDates = student.usageDates;
+        const completedDates = new Set(getStudentCompletedDates(studentId, days));
+        
+        // Return dates that are in usage but not in completed
+        return usageDates.filter(date => !completedDates.has(date)).slice(-days);
+    }, [studentProgress, getStudentCompletedDates]);
+
+    // Get the first date student ever practiced
+    const getStudentFirstActivityDate = useCallback((studentId: string): string | undefined => {
+        const student = studentProgress[studentId];
+        if (!student || !student.usageDates || student.usageDates.length === 0) {
+            return undefined;
+        }
+        
+        // Find the earliest date
+        return [...student.usageDates].sort()[0];
+    }, [studentProgress]);
+
     // Log state before providing it
     console.log("[AppProvider] Current studentProgress state:", JSON.stringify(studentProgress));
 
@@ -368,6 +548,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         resetAllProgress,
         getStudentCurrentDay,
         updateStudentCurrentDay,
+        trackStudentUsage,
+        getStudentUsageDates,
+        getStudentCompletedDates,
+        getStudentPartialDates,
+        getStudentFirstActivityDate,
     }), [
         flashcardSetsState,
         classesState,
@@ -378,6 +563,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         resetAllProgress,
         getStudentCurrentDay,
         updateStudentCurrentDay,
+        trackStudentUsage,
+        getStudentUsageDates,
+        getStudentCompletedDates,
+        getStudentPartialDates,
+        getStudentFirstActivityDate,
     ]);
 
     return (
