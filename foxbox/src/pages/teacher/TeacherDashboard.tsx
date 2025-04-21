@@ -442,6 +442,11 @@ const TeacherDashboard: React.FC = () => {
                                 Object.keys(studentProgress[student.id].progress).length > 0
                             ).length;
                             
+                            // Calculate students who have used the app (have usage dates)
+                            const studentsWithUsage = classStudents.filter(student => 
+                                getStudentUsageDates(student.id).length > 0
+                            ).length;
+                            
                             // Calculate unique cards in this class (without duplicates across students)
                             const uniqueCardIds = new Set<string>();
                             classStudents.forEach(student => {
@@ -492,8 +497,8 @@ const TeacherDashboard: React.FC = () => {
                                                 <Typography variant="h6">{classStudents.length}</Typography>
                                             </Grid>
                                             <Grid item xs={6}>
-                                                <Typography variant="body2" color="text.secondary">With Cards</Typography>
-                                                <Typography variant="h6">{studentsWithProgress}</Typography>
+                                                <Typography variant="body2" color="text.secondary">Using</Typography>
+                                                <Typography variant="h6">{studentsWithUsage}</Typography>
                                             </Grid>
                                             <Grid item xs={6}>
                                                 <Typography variant="body2" color="text.secondary">Total Cards</Typography>
